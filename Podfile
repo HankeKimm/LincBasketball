@@ -7,7 +7,7 @@ target 'LincBasketball' do
 
   # Pods for LincBasketball
   pod 'Firebase/Core'
-  pod 'FBSDKCoreKit'
-  pod 'FBSDKLoginKit'
-  pod 'FBSDKShareKit'
+  pod 'FacebookCore'
+  pod 'FacebookLogin'
+  pod 'FacebookShare'
 end
