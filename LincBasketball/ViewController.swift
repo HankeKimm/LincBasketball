@@ -8,15 +8,17 @@
 
 import UIKit
 import FacebookLogin
+import FirebaseDatabase
 import FirebaseAuth
 
 class ViewController: UIViewController, LoginButtonDelegate {
     
-    var currentUser : FIRUser?
+    var ref: FIRDatabaseReference!
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        let loginButton = LoginButton(readPermissions: [ .publicProfile, .email ])
+        ref = FIRDatabase.database().reference()
+        let loginButton = LoginButton(readPermissions: [ .publicProfile])
         loginButton.center = view.center
         
         view.addSubview(loginButton)
@@ -26,22 +28,34 @@ class ViewController: UIViewController, LoginButtonDelegate {
     func loginButtonDidCompleteLogin(_ loginButton: LoginButton, result: LoginResult) {
         switch result {
         case .cancelled:
-            break
-        case .success(_, _, let accessToken):
+            print("Login cancelled")
+        case .success(let grantedPermissions, _, let accessToken):
+            print(grantedPermissions)
             let credential = FIRFacebookAuthProvider.credential(withAccessToken: accessToken.authenticationToken)
             FIRAuth.auth()?.signIn(with: credential) { (user, error) in
                 if let error = error {
                     print(error)
                 }
                 print("Success")
-                self.currentUser = user
+                let userData = [
+                    "uid": user?.uid,
+                    "displayName": user?.displayName,
+                    "photoURL": user?.photoURL?.absoluteString
+                ]
+                self.ref.child("users").child(user!.uid).setValue(userData)
             }
-        default: break
+        default:
+            break
         }
     }
     
     func loginButtonDidLogOut(_ loginButton: LoginButton) {
-        
+        let firebaseAuth = FIRAuth.auth()
+        do {
+            try firebaseAuth?.signOut()
+        } catch let signOutError as NSError {
+            print ("Error signing out: %@", signOutError)
+        }
     }
     
     override func didReceiveMemoryWarning() {
